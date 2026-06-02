@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	commonlib "github.com/pocwithmehul/common-go-lib"
+	commonlogger "github.com/pocwithmehul/common-go-lib/pkg/logger"
+	"github.com/pocwithmehul/stock-event-generator-service/internal/config"
 	"github.com/pocwithmehul/stock-event-generator-service/internal/messaging"
 	"github.com/pocwithmehul/stock-event-generator-service/internal/yahoo"
 )
@@ -19,12 +20,12 @@ type StockEvent struct {
 }
 
 func main() {
-	cfg, err := commonlib.LoadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("load config: %v", err)
 	}
 
-	logger := commonlib.NewLogger("stock-event-generator-service", cfg.Datadog)
+	logger := commonlogger.NewLogger("stock-event-generator-service", cfg.Datadog)
 	if cfg.IntervalMs <= 0 {
 		cfg.IntervalMs = 10
 	}

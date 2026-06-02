@@ -7,16 +7,16 @@ import (
 	"fmt"
 	"net/http"
 
-	commonlib "github.com/pocwithmehul/common-go-lib"
+	commonlogger "github.com/pocwithmehul/common-go-lib/pkg/logger"
 )
 
 type Client struct {
 	webhookURL string
 	httpClient *http.Client
-	logger     *commonlib.Logger
+	logger     *commonlogger.Logger
 }
 
-func NewClient(webhookURL string, httpClient *http.Client, logger *commonlib.Logger) *Client {
+func NewClient(webhookURL string, httpClient *http.Client, logger *commonlogger.Logger) *Client {
 	return &Client{
 		webhookURL: webhookURL,
 		httpClient: httpClient,
@@ -40,7 +40,11 @@ func (c *Client) SendEvent(ctx context.Context, event interface{}) error {
 	if err != nil {
 		return fmt.Errorf("post event: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			c.logger.Error("close webhook response body failed", map[string]interface{}{"error": closeErr.Error()})
+		}
+	}()
 
 	if resp.StatusCode >= 300 {
 		return fmt.Errorf("webhook returned status %d", resp.StatusCode)
