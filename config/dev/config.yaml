@@ -1,0 +1,16 @@
+server:
+  webhookUrl: http://stock-webhook-service:8090/v1/stock/callbacks
+  port: 8081
+tickers:
+  - AAPL
+  - MSFT
+intervalMs: 10
+datadog:
+  apiKey: ""
+  site: datadoghq.com
+  env: development
+tokenAuthorization:
+  validIssuers:
+    - login.myorg.com
+  validAudience:
+    - myorgstockapp
