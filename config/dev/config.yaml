@@ -4,7 +4,7 @@ server:
 tickers:
   - AAPL
   - MSFT
-intervalMs: 10
+intervalMs: 1000
 datadog:
   apiKey: ""
   site: datadoghq.com

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
 	commonlogger "github.com/pocwithmehul/common-go-lib/pkg/logger"
 )
 
@@ -17,6 +18,7 @@ type Client struct {
 }
 
 func NewClient(webhookURL string, httpClient *http.Client, logger *commonlogger.Logger) *Client {
+	httpClient.Transport = httptrace.WrapRoundTripper(http.DefaultTransport)
 	return &Client{
 		webhookURL: webhookURL,
 		httpClient: httpClient,
