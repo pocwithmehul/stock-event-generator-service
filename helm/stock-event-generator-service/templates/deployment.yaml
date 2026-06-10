@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stock-event-generator-service.fullname" . }}
+  labels:
+    {{- include "stock-event-generator-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "stock-event-generator-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "stock-event-generator-service.selectorLabels" . | nindent 8 }}
+        tags.datadoghq.com/env: {{ .Values.datadog.env | quote }}
+        tags.datadoghq.com/service: "stock-event-generator-service"
+        tags.datadoghq.com/version: {{ .Values.image.tag | quote }}
+      annotations:
+        ad.datadoghq.com/stock-event-generator-service.logs: '[{"source":"go","service":"stock-event-generator-service"}]'
+    spec:
+      containers:
+        - name: stock-event-generator-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: CONFIG_PATH
+              value: /app/config/config.yaml
+            - name: SERVER_PORT
+              value: {{ .Values.config.serverPort | quote }}
+            - name: WEBHOOK_URL
+              value: {{ .Values.config.webhookUrl | quote }}
+            - name: TICKERS
+              value: {{ join "," .Values.config.tickers | quote }}
+            - name: INTERVAL_MS
+              value: {{ .Values.config.intervalMs | quote }}
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_ENTITY_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: DD_SERVICE
+              value: "stock-event-generator-service"
+            - name: DD_ENV
+              value: {{ .Values.datadog.env | quote }}
+            - name: DD_VERSION
+              value: {{ .Values.image.tag | quote }}
+            {{- if .Values.datadog.apiKey }}
+            - name: DATADOG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "stock-event-generator-service.fullname" . }}
+                  key: datadogApiKey
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "stock-event-generator-service.fullname" . }}

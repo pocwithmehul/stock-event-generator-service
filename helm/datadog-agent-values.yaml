@@ -1,0 +1,25 @@
+datadog:
+  apiKeyExistingSecret: datadog-agent-secret
+  clusterName: minikube
+  site: us5.datadoghq.com
+
+  logs:
+    enabled: true
+    containerCollectAll: true
+
+  processAgent:
+    enabled: true
+    processCollection: true
+    containerCollection: true
+
+  apm:
+    portEnabled: true
+
+  kubelet:
+    tlsVerify: false
+
+agents:
+  enabled: true
+
+clusterAgent:
+  enabled: false
